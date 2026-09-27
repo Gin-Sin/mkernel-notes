@@ -8,7 +8,7 @@
 |---|---|---|
 | [AllGather + GEMM](../notes/.vuepress/components/diagrams/GatherGemmLayout.vue) | 原先只有文字，读者无法直接对应“哪段 A 可用”与“哪段 C 可计算” | 新增 A/B/C 轴对齐图；A 与 C 同一 M 段对齐，B 与 C 的 Nₗ 范围对齐。4 个到达阶段同步更新输入和输出；下方比较完整 AllGather 与局部放行的可计算范围 |
 | [分层归约](../notes/.vuepress/components/diagrams/HierarchyTiles.vue) | 默认只显示归约后的 owner，对“8 份变 1 份”的认识依赖文字；跨网箭头在其他阶段仍显示 | 主图直接呈现 8 份不同贡献、节点内和、rail peer 交换及最终和的 8 份副本；完整 GPU × 输出组矩阵按需展开，阶段图仅在交换时显示跨网箭头 |
-| [通信路径](../notes/.vuepress/components/diagrams/TransportPaths.vue) | 手机默认视图被横向裁切，看不到远端 GPU，无法一眼追踪完整 payload 路径 | 窄屏改用上下节点布局，两种后端都能同时看到本地 GPU、CPU、两个 NIC 和远端 GPU；控制路径与 payload 路径保持区分 |
+| [通信路径](../notes/.vuepress/components/diagrams/TransportPaths.vue) | 手机默认视图被横向裁切，看不到远端 GPU，无法一眼追踪完整 payload 路径；后端切换后标题仍归因于 CPU | 窄屏改用上下节点布局，两种后端都能同时看到本地 GPU、CPU、两个 NIC 和远端 GPU；控制路径与 payload 路径保持区分，标题随提交角色切换 |
 | [Token 边界](../notes/.vuepress/components/diagrams/TokenBoundary.vue) | 两块都未到达时仍显示“等待另一部分”，暗示已有一半可用 | 标题改成通用完成条件；分别验证等待两个 chunk、等待 chunk 0、等待 chunk 1 和完整可消费四种状态 |
 | [Ring Attention](../notes/.vuepress/components/diagrams/AttentionRing.vue) | “Q × KV”容易被理解成普通矩阵乘；同轮计算与传递只在说明中出现 | 标为本轮 Attention 的两组输入；并列显示当前计算与同一 KV 的传递。最后一轮撤去传递箭头并显示覆盖完成，保留配对矩阵 |
 | [执行时间线](../notes/.vuepress/components/diagrams/PipelineTimeline.vue) | 同尺度比较已有效，但手机隐藏 tile 编号后不易追踪同一 tile 的依赖 | 给三个阶段中的 tile 1 加粗框；仍能看到首发位置与尾部差异，保留教学成本与模型假设 |

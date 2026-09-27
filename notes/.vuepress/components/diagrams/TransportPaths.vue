@@ -5,7 +5,7 @@ const id = useId()
 </script>
 <template>
   <figure class="mk-figure transport-demo" aria-label="控制命令与 GPU payload 的分离路径">
-    <figcaption><strong>CPU 搬的是命令，NIC 搬的是数据</strong><span>责任与内存位置示意</span></figcaption>
+    <figcaption><strong>{{ mode === 'proxy' ? 'CPU 提交命令，NIC 搬运数据' : 'GPU 提交命令，NIC 搬运数据' }}</strong><span>责任与内存位置示意</span></figcaption>
     <div class="mk-toolbar" role="group" aria-label="选择网络提交后端">
       <button :aria-pressed="mode === 'proxy'" @click="mode = 'proxy'">Host proxy</button>
       <button :aria-pressed="mode === 'ibgda'" @click="mode = 'ibgda'">IBGDA</button>
