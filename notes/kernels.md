@@ -11,6 +11,9 @@ order: 2
 
 ## 路径总览
 
+<details>
+<summary>五类算子的路径与粒度对照</summary>
+
 | 算子 | 依赖 | 节点内路径 | 跨节点路径 | 论文列出的粒度 |
 |---|---|---|---|---|
 | AllGather + GEMM（TP） | 通信 → 计算 | shard multicast broadcast | 每个 shard 向目标节点发送一次；超过两节点时 ring forwarding | 128 行 |
@@ -20,6 +23,8 @@ order: 2
 | Ring Attention（SP） | 每一步内可独立推进 | TMA 将 KV 写到下一张 GPU | KV slice 向目标节点发送一次 | 128 行 KV tile |
 
 这些参数属于论文实现的实例，不能当作所有 GPU 和 shape 的最优值。Dispatch 的 token 粒度与网络 chunk 大小是两种粒度，不能把“16 tokens”和“512 KiB”当成普遍等价关系。
+
+</details>
 
 ## 1. AllGather + GEMM：优先处理可用输入
 
@@ -53,21 +58,17 @@ ReduceScatter 同样对局部贡献求和，但每个 rank 只保留最终输出
 
 Dispatch 把 token 送往负责相应专家的 rank，然后执行专家 GEMM。节点内通过 TMA 拉取 peer token，跨节点先把 token buffer 传到 rail peer。计算按照就绪情况消费输入，不等待整次 dispatch 全部结束。
 
-一个 token 的数据范围可能与两个网络 chunk 相交。下图给出**示意例子**，chunk 和 token 宽度不按字节比例绘制：
+同一个 token 可能跨越两个网络 chunk。切换到达状态，观察完整 token 何时可读。
 
-```mermaid
-flowchart TB
-  A[网络 chunk j 到达] --> C[检查 token 覆盖的全部 chunk]
-  B[网络 chunk j+1 到达] --> C
-  C -->|两者都已到达| D[TMA 读取完整 token]
-  D --> E[对应专家的 GEMM]
-```
+<TokenBoundary />
 
 **Motivation：** 等完整 all-to-all 会延后所有专家计算，专家间的就绪时间差也难以利用。较小 token 若逐条提交网络请求，又会放大网络控制成本。
 
 **收益原理：** 网络按较大 chunk 摊薄提交成本，计算按 token／tile 就绪推进，并结合 grouped expert computation。论文 EFA 的 3.1–4.5× 相对基线同时包含专家 GEMM 组织方式的差异，不能全部归因于通信重叠。[论文 §3.1、§5.3](https://arxiv.org/html/2609.13585v1#S5.SS3)
 
 ## 5. Ring Attention：计算当前 KV，同时推进后续可用性
+
+<AttentionRing />
 
 序列并行把序列分片到多张 GPU。本地 Q 需要依次与各 KV 分片交互。mKernel 在启动时把本地 KV slice 的跨节点传输尽早发出；节点内通过 TMA 向下一 GPU 传 KV。每一步中，对当前可用 KV 的 attention 计算与 KV 传递可以重叠，下一步仍需等待所需数据真正到达。[论文 §4、表 3](https://arxiv.org/html/2609.13585v1#S4)
 

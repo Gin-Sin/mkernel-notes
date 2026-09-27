@@ -25,6 +25,8 @@ order: 3
 
 ## 2. 相对未融合基线的结果
 
+<PeakComparison />
+
 | 算子 | AWS EFA | ConnectX-7 | 比较范围与限定 |
 |---|---|---|---|
 | AllGather + GEMM | 最高 **1.41×** | 最高 **1.34×** | 相对 cuBLAS + NCCL；两测试床所有被测大小均更快 |

@@ -3,6 +3,20 @@ import { defineClientConfig } from "vuepress/client"
 
 import SmAllocationDemo from "./components/diagrams/SmAllocationDemo.vue"
 
+import PipelineTimeline from "./components/diagrams/PipelineTimeline.vue"
+
+import HierarchyTiles from "./components/diagrams/HierarchyTiles.vue"
+
+import ChunkReadiness from "./components/diagrams/ChunkReadiness.vue"
+
+import TransportPaths from "./components/diagrams/TransportPaths.vue"
+
+import TokenBoundary from "./components/diagrams/TokenBoundary.vue"
+
+import AttentionRing from "./components/diagrams/AttentionRing.vue"
+
+import PeakComparison from "./components/diagrams/PeakComparison.vue"
+
 import "katex/dist/katex.min.css"
 
 defineMermaidConfig({
@@ -45,6 +59,13 @@ defineMermaidConfig({
 
 export default defineClientConfig({
   enhance({ app }) {
+    app.component("PipelineTimeline", PipelineTimeline)
+    app.component("HierarchyTiles", HierarchyTiles)
+    app.component("ChunkReadiness", ChunkReadiness)
+    app.component("TransportPaths", TransportPaths)
+    app.component("TokenBoundary", TokenBoundary)
+    app.component("AttentionRing", AttentionRing)
+    app.component("PeakComparison", PeakComparison)
     app.component("SmAllocationDemo", SmAllocationDemo)
   },
 })

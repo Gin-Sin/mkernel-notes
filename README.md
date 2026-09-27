@@ -8,7 +8,7 @@
 - [性能结果与适用边界](notes/evaluation.md)
 - [固定版本源码核对](notes/implementation.md)
 
-包含分层通信图、依赖图、公式和可交互 SM 资源分配示例。性能数字来自论文 v1，未在此仓库复跑 GPU benchmark。源码核对固定于 uccl-project/mKernel commit `31b6b0f97e7bbc966fcb6179607131e76cae6f20`。
+包含执行时间线、GPU × 输出分片布局、tile/chunk 分组、SM 资源格子、控制与数据路径、token 字节边界、KV 环形移动和峰值性能图。配图区分论文数据与教学示意，精确参数与推导可按需展开。性能数字来自论文 v1，未在此仓库复跑 GPU benchmark。源码核对固定于 uccl-project/mKernel commit `31b6b0f97e7bbc966fcb6179607131e76cae6f20`。
 
 ## 本地使用
 

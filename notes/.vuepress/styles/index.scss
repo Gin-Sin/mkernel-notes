@@ -1,4 +1,5 @@
 @use "./tokens";
+@use "./diagrams";
 
 .katex {
   direction: ltr;
@@ -161,3 +162,13 @@
     display: none !important;
   }
 }
+
+
+[vp-content] details {
+  margin-block: 1rem;
+  padding: .8rem 1rem;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 8px;
+}
+[vp-content] summary { cursor: pointer; font-weight: 600; }
+[vp-content] details[open] > summary { margin-bottom: 1rem; }

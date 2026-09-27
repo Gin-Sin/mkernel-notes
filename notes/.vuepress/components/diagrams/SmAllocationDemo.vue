@@ -1,64 +1,61 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
 const uid = useId()
-const computeWork = ref(75)
-const commWork = ref(25)
-const slots = 100
-const share = computed(() => slots * commWork.value / (computeWork.value + commWork.value))
-const computeShare = computed(() => slots - share.value)
-const balancedTime = computed(() => (computeWork.value + commWork.value) / slots)
-function preset(compute: number, comm: number) {
-  computeWork.value = compute
-  commWork.value = comm
-}
+const computeWork = ref(5)
+const commWork = ref(70)
+const slots = 32
+const adaptive = computed(() => {
+  const total = computeWork.value + commWork.value
+  if (!total || !commWork.value) return 0
+  if (!computeWork.value) return slots
+  return Math.max(1, Math.min(slots - 1, Math.round(slots * commWork.value / total)))
+})
+function duration(work: number, count: number) { return work ? work / count : 0 }
+const options = computed(() => [
+  { label: '固定分配', comm: 8 },
+  { label: '按剩余工作调整', comm: adaptive.value },
+].map(p => ({...p, computeTime: duration(computeWork.value, slots - p.comm), commTime: duration(commWork.value, p.comm)})))
+const maxTime = computed(() => Math.max(1, ...options.value.flatMap(p => [p.computeTime, p.commTime])))
+function preset(c: number, n: number) { computeWork.value = c; commWork.value = n }
 </script>
-
 <template>
-  <figure class="sm-demo" aria-label="按剩余工作量调整计算与通信资源的示意">
-    <figcaption><strong>剩余工作变化时，通信份额怎样变化？</strong><span>公式演示 · 任意单位 · 非性能实测</span></figcaption>
-    <div class="presets" role="group" aria-label="选择剩余工作场景">
-      <button type="button" @click="preset(75, 25)">计算工作较多</button>
-      <button type="button" @click="preset(50, 50)">剩余工作相当</button>
-      <button type="button" @click="preset(10, 70)">通信尾部</button>
+  <figure class="mk-figure sm-demo" aria-label="固定与自适应资源分配的 block 网格比较">
+    <figcaption><strong>计算快结束了，谁来清理通信尾部？</strong><span>线性模型 · 任意单位 · 非实测</span></figcaption>
+    <div class="mk-toolbar" role="group" aria-label="选择剩余工作场景">
+      <button @click="preset(75, 25)" :aria-pressed="computeWork === 75 && commWork === 25">计算较多</button>
+      <button @click="preset(50, 50)" :aria-pressed="computeWork === 50 && commWork === 50">工作相当</button>
+      <button @click="preset(5, 70)" :aria-pressed="computeWork === 5 && commWork === 70">通信尾部</button>
+      <button @click="preset(0, 70)" :aria-pressed="computeWork === 0 && commWork === 70">计算已完成</button>
     </div>
-    <div class="controls">
-      <label :for="`${uid}-compute`">计算剩余工作 RₚCₚ：<output>{{ computeWork }}</output>
-        <input :id="`${uid}-compute`" v-model.number="computeWork" type="range" min="1" max="100" />
-      </label>
-      <label :for="`${uid}-comm`">通信剩余工作 RₛCₛ：<output>{{ commWork }}</output>
-        <input :id="`${uid}-comm`" v-model.number="commWork" type="range" min="1" max="100" />
-      </label>
+    <div class="mk-two work-controls">
+      <label :for="`${uid}-compute`">计算剩余工作：{{ computeWork }}<input :id="`${uid}-compute`" v-model.number="computeWork" type="range" min="0" max="100" /></label>
+      <label :for="`${uid}-comm`">通信剩余工作：{{ commWork }}<input :id="`${uid}-comm`" v-model.number="commWork" type="range" min="0" max="100" /></label>
     </div>
-    <div class="allocation" aria-hidden="true">
-      <span class="compute" :style="{ width: `${computeShare}%` }"></span>
-      <span class="communication" :style="{ width: `${share}%` }"></span>
+    <div class="mk-two">
+      <div v-for="panel in options" :key="panel.label" class="mk-panel">
+        <strong>{{ panel.label }}</strong>
+        <div class="sm-grid" role="img" :aria-label="`${slots - panel.comm} 个计算 block，${panel.comm} 个通信 block`">
+          <span v-for="block in slots" :key="block" :class="{ comm: block > slots - panel.comm, idle: block > slots - panel.comm ? !commWork : !computeWork }"></span>
+        </div>
+        <div class="slot-count"><span>计算 {{ slots - panel.comm }}</span><span>通信 {{ panel.comm }}</span></div>
+        <div class="duration-row"><span>计算</span><div><i :style="{ width: `${panel.computeTime / maxTime * 100}%` }"></i></div><b>{{ panel.computeTime.toFixed(2) }}</b></div>
+        <div class="duration-row network"><span>通信</span><div><i :style="{ width: `${panel.commTime / maxTime * 100}%` }"></i></div><b>{{ panel.commTime.toFixed(2) }}</b></div>
+        <div class="finish-time">两项都完成：<strong>{{ Math.max(panel.computeTime, panel.commTime).toFixed(2) }}</strong> 单位</div>
+      </div>
     </div>
-    <div class="readout" aria-live="polite" aria-atomic="true">
-      <span class="compute-key">计算 {{ computeShare.toFixed(1) }}%</span>
-      <span class="comm-key">通信 {{ share.toFixed(1) }}%</span>
-      <span>理想均衡完成时间：{{ balancedTime.toFixed(2) }} 单位</span>
-    </div>
-    <p>假设 B = 100、资源可连续划分、任务成本已知。通信份额 = 通信剩余工作 ÷ 总剩余工作。通信任务变少时，目标份额会随之降低。</p>
+    <div class="mk-legend"><span><i style="--swatch: var(--mk-compute)"></i>计算 block</span><span><i style="--swatch: var(--mk-network)"></i>通信 block</span><span><i style="--swatch: var(--diagram-line)"></i>已无任务的 block</span></div>
+    <div class="mk-readout" aria-live="polite">通信目标：<strong>{{ adaptive }} / 32 blocks</strong>。{{ !computeWork && !commWork ? '两类任务都已完成。' : !computeWork && commWork ? '计算结束后，固定分配中的 24 个 block 闲置；动态分配可把它们交给剩余通信。' : '看下方两条完成时间：资源重新分配后，两类工作的尾部更接近。' }}</div>
+    <p class="mk-note">32 格代表可分配 block，并非真实 SM 数。完成时间 = 剩余工作 ÷ block 数；按论文式 (2) 取整，忽略依赖、切换成本与吞吐饱和。</p>
   </figure>
 </template>
-
 <style scoped>
-.sm-demo { margin: 1.5rem 0; padding: 1.4rem; border: 1px solid var(--diagram-line); border-radius: 10px; background: var(--vp-c-bg-alt); }
-figcaption { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; }
-figcaption span, .sm-demo p { color: var(--diagram-muted); font-size: .9rem; }
-.presets { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.3rem; }
-button { font: inherit; font-size: .9rem; padding: .45rem .75rem; border: 1px solid var(--diagram-line); border-radius: 6px; background: var(--vp-c-bg); color: var(--vp-c-text); cursor: pointer; }
-button:hover { border-color: var(--diagram-primary); }
-button:focus-visible, input:focus-visible { outline: 2px solid var(--diagram-primary); outline-offset: 3px; }
-.controls { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
-label { display: block; font-size: .95rem; }
-input { display: block; width: 100%; margin: .9rem 0 1.2rem; accent-color: var(--diagram-primary); }
-.allocation { display: flex; height: 28px; overflow: hidden; border-radius: 5px; }
-.compute { background: var(--diagram-primary); }
-.communication { background: var(--diagram-warning); }
-.readout { display: flex; flex-wrap: wrap; gap: .7rem 1.3rem; margin-top: .75rem; font-size: .95rem; }
-.compute-key { color: var(--diagram-primary); font-weight: 600; }
-.comm-key { color: var(--diagram-warning); font-weight: 600; }
-.sm-demo p { margin-bottom: 0; }
-@media (max-width: 600px) { .controls { grid-template-columns: 1fr; gap: 0; } .sm-demo { padding: 1rem; } }
+.work-controls { margin-bottom: 1rem; font-size: .9rem; }
+.sm-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+.sm-grid span { aspect-ratio: 1.1; max-height: 33px; border: 1px solid var(--mk-compute); border-radius: 4px; background: color-mix(in srgb, var(--mk-compute) 25%, transparent); }
+.sm-grid span.comm { border-color: var(--mk-network); background: color-mix(in srgb, var(--mk-network) 25%, transparent); }
+.sm-grid span.idle { border-style: dashed; border-color: var(--diagram-line); background: var(--vp-c-bg-alt); }
+.slot-count { display: flex; justify-content: space-between; margin: .5rem 0 1rem; font-size: .875rem; }.slot-count span:first-child { color: var(--mk-compute); }.slot-count span:last-child { color: var(--mk-network); }
+.duration-row { display: grid; grid-template-columns: 30px 1fr 38px; align-items: center; gap: 5px; font-size: .8rem; margin: .5rem 0; }
+.duration-row > div { height: 12px; background: var(--vp-c-bg-alt); }.duration-row i { display: block; height: 100%; background: var(--mk-compute); border-radius: 2px; }.duration-row.network i { background: var(--mk-network); }.duration-row b { text-align: right; font-weight: 400; }
+.finish-time { margin-top: .75rem; font-size: .875rem; }.finish-time strong { font-size: 1.15rem; }
 </style>
