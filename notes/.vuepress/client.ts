@@ -18,6 +18,8 @@ import AttentionRing from "./components/diagrams/AttentionRing.vue"
 import PeakComparison from "./components/diagrams/PeakComparison.vue"
 
 import GatherGemmLayout from "./components/diagrams/GatherGemmLayout.vue"
+import AllReduceChunkTrace from "./components/diagrams/AllReduceChunkTrace.vue"
+import CommandPublication from "./components/diagrams/CommandPublication.vue"
 
 import "katex/dist/katex.min.css"
 
@@ -70,5 +72,7 @@ export default defineClientConfig({
     app.component("PeakComparison", PeakComparison)
     app.component("GatherGemmLayout", GatherGemmLayout)
     app.component("SmAllocationDemo", SmAllocationDemo)
+    app.component("AllReduceChunkTrace", AllReduceChunkTrace)
+    app.component("CommandPublication", CommandPublication)
   },
 })

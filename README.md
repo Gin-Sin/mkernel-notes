@@ -3,12 +3,14 @@
 中文解读 [mKernel: Fast Multi-GPU, Multi-Node Fused Kernels](https://arxiv.org/abs/2609.13585v1)，逐项解释优化设计、motivation、收益机制、实现证据与性能边界。
 
 - 在线阅读：https://Gin-Sin.github.io/mkernel-notes/
-- [设计与收益原理](notes/index.md)
-- [五类算子的依赖与调度](notes/kernels.md)
+- [主线：从一次 AllReduce 理解 mKernel](notes/index.md)
+- [协同机制：把就绪、通信与资源接起来](notes/mechanisms.md)
+- [五类算子：按依赖方向选择调度](notes/kernels.md)
+- [源码导读：跟踪一个 AllReduce chunk](notes/code-walkthrough.md)
 - [性能结果与适用边界](notes/evaluation.md)
-- [固定版本源码核对](notes/implementation.md)
+- [源码索引与复现边界](notes/implementation.md)
 
-包含执行时间线、GPU × 输出分片布局、tile/chunk 分组、SM 资源格子、控制与数据路径、token 字节边界、KV 环形移动和峰值性能图。配图区分论文数据与教学示意，精确参数与推导可按需展开。性能数字来自论文 v1，未在此仓库复跑 GPU benchmark。源码核对固定于 uccl-project/mKernel commit `31b6b0f97e7bbc966fcb6179607131e76cae6f20`。
+按“完整案例 → 协同机制 → 算子差异 → 源码追踪 → 性能证据”阅读。11 张示意图分别呈现时间重叠、数据归属、矩阵分块、粒度衔接、资源分配、通信路径、token 边界、KV 交换、性能结果，以及新增的 AllReduce 缓冲区／就绪状态与 48 字节命令发布。配图区分论文数据与教学示意，精确参数与推导可按需展开。性能数字来自论文 v1，未在此仓库复跑 GPU benchmark。源码核对固定于 uccl-project/mKernel commit `31b6b0f97e7bbc966fcb6179607131e76cae6f20`。
 
 ## 本地使用
 

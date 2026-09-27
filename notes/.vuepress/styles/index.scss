@@ -172,3 +172,8 @@
 }
 [vp-content] summary { cursor: pointer; font-weight: 600; }
 [vp-content] details[open] > summary { margin-bottom: 1rem; }
+
+@media (max-width: 719px) {
+  /* Keep Chinese comparison columns readable inside the theme's scrollable tables. */
+  [vp-content] table :is(th, td) { min-width: 8rem; }
+}
