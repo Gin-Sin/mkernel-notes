@@ -32,7 +32,7 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
       <div class="trace-exchange"><span>跨网</span><b>⇄</b></div>
     </div>
     <div class="traffic">
-      <span>全部 8 组分给 8 个 owner · 一个节点共发送 D</span>
+      <span>D：完整输出字节数 · 每节点共发送 D</span>
       <div class="partitioned"><span v-for="i in 8" :key="i" :class="{ chosen: selected === i - 1 }">{{ i - 1 }}</span></div>
       <span>高亮组：GPU {{ selected }} 与远端同编号 GPU 交换 D/8</span>
     </div>
@@ -58,7 +58,7 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
     <div class="mk-readout" aria-live="polite">{{ descriptions[stage] }}</div>
     <p class="mk-note">a / b：单 GPU 贡献；A / B：节点内和；Σ = A + B。空格省略非 owner 的存储状态，不表示清空 buffer；逻辑分组不代表实际地址连续。</p>
     </details>
-    <p class="mk-note">主图追踪同一输出组：归约前是不同 GPU 的贡献，广播后是相同的最终和。每组独立推进；D/8 是两节点交换阶段的每 GPU 发送量，不是相对 NCCL 的加速比。</p>
+    <p class="mk-note">D/8 为两节点交换阶段的每 GPU 发送量；各组可独立推进。</p>
   </figure>
 </template>
 <style scoped>

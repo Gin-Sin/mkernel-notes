@@ -14,7 +14,7 @@ order: 4
 | 机制 | 固定版本入口 | 实际核对到的内容 |
 |---|---|---|
 | 48 字节命令 | [types.h](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/comm/internode/types.h#L14-L56) | `TransferCmd` 大小由 static assertion 约束；offset、长度、目的地、tile 标识等字段按 8 字节字组织 |
-| 先正文、后 header | [d2h_fifo.cuh](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/comm/internode/d2h_fifo.cuh#L45-L95) | GPU 领取 ring slot，满队列时检查 tail，再发布正文与 header |
+| 先写命令内容，再写命令头 | [d2h_fifo.cuh](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/comm/internode/d2h_fifo.cuh#L45-L95) | GPU 领取 ring slot，满队列时检查 tail；先写命令内容，再写命令头（header）以发布该命令 |
 | Host 消费记录 | [d2h_fifo.cuh](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/comm/internode/d2h_fifo.cuh#L200-L229) | acquire 读取命令类型，复制记录，清空 slot 供复用 |
 | CX7 批量提交 | [proxy.h](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/comm/internode/proxy.h#L806) | 最多 8 条命令；存在 partial batch；数据与通知使用对应 RDMA write |
 | EFA 完成通知 | [proxy_efa.h](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/comm/internode/proxy_efa.h#L1-L19) | 默认 `write_imm` 路径处理接收完成后发布 mapped arrival flag；另有其他可选模式 |
