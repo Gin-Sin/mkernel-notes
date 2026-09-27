@@ -16,6 +16,28 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
 <template>
   <figure class="mk-figure hierarchy-demo" aria-label="两个节点上 GPU 与输出分片的数据布局">
     <figcaption><strong>8 份局部贡献，怎样只跨网发送 1 份？</strong><span>2 节点 × 8 GPU · 布局示意</span></figcaption>
+    <div class="mk-toolbar" role="group" aria-label="选择要追踪的输出组"><span>追踪输出组</span><button v-for="col in 8" :key="col" :aria-pressed="selected === col - 1" @click="selected = col - 1">{{ col - 1 }}</button></div>
+    <div class="reduction-trace" :aria-label="`输出组 ${selected} 在两个节点内归约、跨节点交换再广播`" role="group">
+      <template v-for="node in [0, 1]" :key="node">
+        <div class="trace-contributions" :style="{ gridColumn: node ? 3 : 1 }">
+          <strong>节点 {{ node }}</strong>
+          <span class="trace-label">GPU 0–7 的贡献</span>
+          <div class="contribution-chips"><span v-for="gpu in 8" :key="gpu">{{ node ? 'b' : 'a' }}{{ gpu - 1 }}</span></div>
+        </div>
+        <div class="trace-reduce" :style="{ gridColumn: node ? 3 : 1 }"><span>↓</span> NVSwitch 归约</div>
+        <div class="trace-owner" :style="{ gridColumn: node ? 3 : 1 }"><strong>{{ node ? 'B' : 'A' }}</strong><span>节点内部分和</span><small>owner · GPU {{ selected }}</small></div>
+        <div class="trace-combine" :style="{ gridColumn: node ? 3 : 1 }"><span>↓ 加上远端部分和</span><strong>Σ = A + B</strong></div>
+        <div class="trace-broadcast" :style="{ gridColumn: node ? 3 : 1 }"><span class="trace-label">↓ NVSwitch 广播</span><div class="contribution-chips"><span v-for="gpu in 8" :key="gpu">Σ</span></div><span class="trace-label">GPU 0–7 各得一份</span></div>
+      </template>
+      <div class="trace-exchange"><span>跨网</span><b>⇄</b></div>
+    </div>
+    <div class="traffic">
+      <span>全部 8 组分给 8 个 owner · 一个节点共发送 D</span>
+      <div class="partitioned"><span v-for="i in 8" :key="i" :class="{ chosen: selected === i - 1 }">{{ i - 1 }}</span></div>
+      <span>高亮组：GPU {{ selected }} 与远端同编号 GPU 交换 D/8</span>
+    </div>
+    <details class="layout-detail">
+    <summary>展开逐阶段的完整 GPU × 输出组布局</summary>
     <div class="mk-toolbar" role="group" aria-label="选择 AllReduce 阶段">
       <button v-for="(name, i) in steps" :key="name" :aria-pressed="stage === i" @click="stage = i">{{ i + 1 }}. {{ name }}</button>
     </div>
@@ -32,19 +54,26 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
         </div>
       </div>
     </div>
-    <div class="exchange" :class="{ active: stage === 2 }">
-      <span>GPU {{ selected }} · 节点 0</span><strong>{{ stage === 2 ? 'A ⇄ B' : '⇄' }}</strong><span>GPU {{ selected }} · 节点 1</span>
-    </div>
-    <div class="traffic">
-      <span>交换阶段 · 一个节点的输出 D</span>
-      <div class="partitioned"><span v-for="i in 8" :key="i" :class="{ chosen: selected === i - 1 }">{{ i - 1 }}</span></div>
-      <span>每 GPU 发 D/8；全节点共发 D</span>
-    </div>
+    <div v-if="stage === 2" class="exchange active"><span>GPU {{ selected }} · 节点 0</span><strong>A ⇄ B</strong><span>GPU {{ selected }} · 节点 1</span></div>
     <div class="mk-readout" aria-live="polite">{{ descriptions[stage] }}</div>
     <p class="mk-note">a / b：单 GPU 贡献；A / B：节点内和；Σ = A + B。空格省略非 owner 的存储状态，不表示清空 buffer；逻辑分组不代表实际地址连续。</p>
+    </details>
+    <p class="mk-note">主图追踪同一输出组：归约前是不同 GPU 的贡献，广播后是相同的最终和。每组独立推进；D/8 是两节点交换阶段的每 GPU 发送量，不是相对 NCCL 的加速比。</p>
   </figure>
 </template>
 <style scoped>
+.reduction-trace { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); margin-bottom: 1.1rem; }
+.trace-contributions { grid-row: 1; }.trace-contributions > strong { display: block; margin-bottom: .2rem; }
+.trace-label { display: block; color: var(--diagram-muted); font-size: .8rem; margin: .35rem 0; }
+.contribution-chips { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; }
+.contribution-chips > span { display: grid; place-items: center; border: 1px solid var(--mk-compute); background: color-mix(in srgb, var(--mk-compute) 12%, transparent); color: var(--mk-compute); min-height: 28px; font-size: .8rem; border-radius: 3px; }
+.trace-reduce { grid-row: 2; padding: .5rem 0; font-size: .85rem; color: var(--mk-local); text-align: center; }.trace-reduce > span { font-size: 1.3rem; }
+.trace-owner { grid-row: 3; padding: .5rem; border: 2px solid var(--mk-local); border-radius: 6px; display: grid; justify-items: center; background: color-mix(in srgb, var(--mk-local) 9%, transparent); }.trace-owner > strong { font-size: 1.4rem; color: var(--mk-local); }.trace-owner > span, .trace-owner > small { font-size: .8rem; }
+.trace-exchange { grid-column: 2; grid-row: 3; align-self: center; text-align: center; color: var(--mk-network); font-size: .75rem; }.trace-exchange b { display: block; font-size: 1.6rem; }
+.trace-combine { grid-row: 4; display: grid; justify-items: center; gap: .3rem; padding: .55rem 0; }.trace-combine span { font-size: .8rem; color: var(--diagram-muted); }.trace-combine strong { color: var(--mk-network); font-size: 1rem; }
+.trace-broadcast { grid-row: 5; }.trace-broadcast .contribution-chips span { border-color: var(--mk-network); background: color-mix(in srgb, var(--mk-network) 12%, transparent); color: var(--mk-network); }
+.layout-detail { margin-top: 1.1rem; border-top: 1px solid var(--diagram-line); padding-top: .75rem; }.layout-detail summary { cursor: pointer; font-size: .9rem; }.layout-detail[open] summary { margin-bottom: 1rem; }
+@media (max-width: 600px) { .reduction-trace { grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr); }.contribution-chips { grid-template-columns: repeat(4, minmax(0, 1fr)); }.trace-reduce { font-size: .78rem; }.trace-combine span { font-size: .75rem; } }
 .node-board { border: 1px solid var(--diagram-line); border-radius: 8px; padding: .7rem; }
 .node-title { display: flex; justify-content: space-between; gap: .4rem; align-items: baseline; margin-bottom: .7rem; }
 .node-title span { font-size: .8rem; color: var(--diagram-muted); }

@@ -30,6 +30,10 @@ order: 2
 
 每个 rank 持有激活矩阵 $A$ 的一个 shard。GEMM 需要完整 $A$，但不需要等所有行到齐后才开始计算已经具备输入的输出行块。
 
+<GatherGemmLayout />
+
+图中 A 与 C 沿 M 轴对齐，B 与 C 沿本 rank 的输出列轴 $N_l$ 对齐。一个 A 行分片就绪，就为对应的 C 行块提供输入；它与本地 B 的计算不依赖其他 A 行。分块图据[论文 §3.1、§4](https://arxiv.org/html/2609.13585v1#S4)重新绘制，四段行与到达阶段用于教学。
+
 mKernel 在 kernel 启动时就向 rail peer 提交输入 shard 的网络传输，同时处理本 GPU 的 shard。接着计算本节点其他 GPU 通过 NVLink 提供的 shard，最后消费远端 shard。接收 rail peer 在节点内广播数据，避免同一远端 shard 为节点内多个 GPU 重复跨网。
 
 **Motivation：** AllGather 的整体完成条件比单个 GEMM tile 的输入条件更强，会引入多余等待。远端数据最慢，应最早传输；本地数据最快，应先提供有效计算。

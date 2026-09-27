@@ -34,7 +34,7 @@ const panels = computed(() => [
       <button v-for="size in [2, 3, 6]" :key="size" :aria-pressed="chunk === size" @click="chunk = size">{{ size }} tiles</button>
     </div>
     <div class="mk-legend">
-      <span v-for="(stage, i) in stages" :key="stage"><i :style="{ '--swatch': ['var(--mk-compute)', 'var(--mk-local)', 'var(--mk-network)'][i] }"></i>{{ stage }} {{ costs[i] }} μs / tile</span>
+      <span v-for="(stage, i) in stages" :key="stage"><i :style="{ '--swatch': ['var(--mk-compute)', 'var(--mk-local)', 'var(--mk-network)'][i] }"></i>{{ stage }} {{ costs[i] }} μs / tile</span><span>粗框追踪 tile 1</span>
     </div>
     <div class="mk-scroll" tabindex="0" role="region" aria-label="执行时间线，窄屏可横向滚动">
       <div class="timeline-canvas">
@@ -43,7 +43,7 @@ const panels = computed(() => [
           <div v-for="(lane, stage) in panel.lanes" :key="stage" class="lane">
             <span class="lane-label">{{ stages[stage] }}</span>
             <div class="lane-track">
-              <span v-for="task in lane" :key="task.tile" class="tile-task" :class="`stage-${stage}`" :style="{ left: `${task.start / 54 * 100}%`, width: `${(task.end - task.start) / 54 * 100}%` }" :title="`tile ${task.tile + 1}：${task.start}–${task.end} μs`">{{ task.tile + 1 }}</span>
+              <span v-for="task in lane" :key="task.tile" class="tile-task" :class="[`stage-${stage}`, { tracked: task.tile === 0 }]" :style="{ left: `${task.start / 54 * 100}%`, width: `${(task.end - task.start) / 54 * 100}%` }" :title="`tile ${task.tile + 1}：${task.start}–${task.end} μs`">{{ task.tile + 1 }}</span>
               <span class="finish" :style="{ left: `${panel.end / 54 * 100}%` }"></span>
             </div>
           </div>
@@ -68,6 +68,7 @@ const panels = computed(() => [
 .lane-track { height: 25px; position: relative; background: repeating-linear-gradient(to right, var(--diagram-line) 0, var(--diagram-line) 1px, transparent 1px, transparent 16.66667%); }
 .tile-task { position: absolute; top: 0; height: 25px; border: 1px solid var(--tone); border-radius: 3px; background: color-mix(in srgb, var(--tone) 20%, var(--vp-c-bg)); color: var(--vp-c-text); font-size: .8rem; text-align: center; line-height: 23px; }
 .stage-0 { --tone: var(--mk-compute); }.stage-1 { --tone: var(--mk-local); }.stage-2 { --tone: var(--mk-network); }
+.tile-task.tracked { border: 2px solid var(--vp-c-text); line-height: 21px; background: color-mix(in srgb, var(--tone) 32%, var(--vp-c-bg)); }
 .finish { position: absolute; top: -1px; height: 27px; border-left: 1px dashed var(--diagram-muted); }
 .axis { position: relative; height: 24px; margin: .65rem 0 0 66px; color: var(--diagram-muted); font-size: .8rem; }
 .axis span { position: absolute; transform: translateX(-50%); }.axis span:last-child { transform: translateX(-100%); }

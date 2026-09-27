@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 const left = ref(true)
 const right = ref(false)
+const waiting = computed(() => !left.value && !right.value ? '等待两个 chunk' : `等待 chunk ${left.value ? 1 : 0}`)
 </script>
 <template>
   <figure class="mk-figure boundary-demo" aria-label="一个 token 横跨两个网络 chunk 的字节布局">
-    <figcaption><strong>一半 token 到了，还不能读完整 token</strong><span>字节布局 · 示意 token 为 16 KiB</span></figcaption>
+    <figcaption><strong>跨界 token，要等两块数据到齐</strong><span>字节布局 · 示意 token 为 16 KiB</span></figcaption>
     <div class="mk-toolbar" role="group" aria-label="切换两个 chunk 的到达状态">
       <button :aria-pressed="left" @click="left = !left">chunk 0：{{ left ? '已到达' : '未到达' }}</button>
       <button :aria-pressed="right" @click="right = !right">chunk 1：{{ right ? '已到达' : '未到达' }}</button>
@@ -23,7 +24,7 @@ const right = ref(false)
       <span class="token-label">token · 504–520 KiB</span>
     </div>
     <div class="buffer-axis"><span>480</span><span>512 KiB</span><span>544</span></div>
-    <div class="consume-state" :class="{ allowed: left && right }" aria-live="polite"><strong>{{ left && right ? '✓ 完整 token 可消费' : '等待另一部分' }}</strong><span>前 8 KiB {{ left ? '✓' : '…' }}　后 8 KiB {{ right ? '✓' : '…' }}</span></div>
+    <div class="consume-state" :class="{ allowed: left && right }" aria-live="polite"><strong>{{ left && right ? '✓ 完整 token 可消费' : waiting }}</strong><span>前 8 KiB {{ left ? '✓' : '…' }}　后 8 KiB {{ right ? '✓' : '…' }}</span></div>
     <p class="mk-note">紫条是同一个 token；两图各按所标字节范围画比例。chunk 为论文的 512 KiB，token 的位置与大小为教学示例。</p>
   </figure>
 </template>

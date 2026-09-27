@@ -44,7 +44,7 @@ function preset(c: number, n: number) { computeWork.value = c; commWork.value = 
       </div>
     </div>
     <div class="mk-legend"><span><i style="--swatch: var(--mk-compute)"></i>计算 block</span><span><i style="--swatch: var(--mk-network)"></i>通信 block</span><span><i style="--swatch: var(--diagram-line)"></i>已无任务的 block</span></div>
-    <div class="mk-readout" aria-live="polite">通信目标：<strong>{{ adaptive }} / 32 blocks</strong>。{{ !computeWork && !commWork ? '两类任务都已完成。' : !computeWork && commWork ? '计算结束后，固定分配中的 24 个 block 闲置；动态分配可把它们交给剩余通信。' : '看下方两条完成时间：资源重新分配后，两类工作的尾部更接近。' }}</div>
+    <div class="mk-readout" aria-live="polite">通信目标：<strong>{{ adaptive }} / 32 blocks</strong>。{{ !computeWork && !commWork ? '两类任务都已完成。' : !computeWork ? '计算结束后，固定分配中的 24 个 block 闲置；动态分配可把它们交给剩余通信。' : !commWork ? '通信已完成，32 个 block 都可用于剩余计算。' : '两侧条形共用尺度。分配按剩余工作比例取整；两类工作的完成时间由工作量和 block 数共同决定。' }}</div>
     <p class="mk-note">32 格代表可分配 block，并非真实 SM 数。完成时间 = 剩余工作 ÷ block 数；按论文式 (2) 取整，忽略依赖、切换成本与吞吐饱和。</p>
   </figure>
 </template>

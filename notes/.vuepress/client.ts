@@ -17,6 +17,8 @@ import AttentionRing from "./components/diagrams/AttentionRing.vue"
 
 import PeakComparison from "./components/diagrams/PeakComparison.vue"
 
+import GatherGemmLayout from "./components/diagrams/GatherGemmLayout.vue"
+
 import "katex/dist/katex.min.css"
 
 defineMermaidConfig({
@@ -66,6 +68,7 @@ export default defineClientConfig({
     app.component("TokenBoundary", TokenBoundary)
     app.component("AttentionRing", AttentionRing)
     app.component("PeakComparison", PeakComparison)
+    app.component("GatherGemmLayout", GatherGemmLayout)
     app.component("SmAllocationDemo", SmAllocationDemo)
   },
 })
