@@ -12,6 +12,8 @@
 
 按“完整案例 → 协同机制 → 算子差异 → 源码追踪 → 性能证据”阅读。11 张示意图分别呈现时间重叠、数据归属、矩阵分块、粒度衔接、资源分配、通信路径、token 边界、KV 交换、性能结果，以及新增的 AllReduce 缓冲区／就绪状态与 48 字节命令发布。配图区分论文数据与教学示意，精确参数与推导可按需展开。性能数字来自论文 v1，未在此仓库复跑 GPU benchmark。源码核对固定于 uccl-project/mKernel commit `31b6b0f97e7bbc966fcb6179607131e76cae6f20`。
 
+[配图参考与本轮审阅](reviews/visual-reference-review-2026-09-29.md)记录了 CUTLASS、PagedAttention、FlashAttention-2、OSTEP 与 C4 的参考图，以及 11 张图的保留依据、修改和验证。
+
 ## 本地使用
 
 基于 [vuepress-notes-template](https://github.com/0xkoa1a/vuepress-notes-template)，保留其搜索、KaTeX、Mermaid、暗色模式、文章目录和单页导出能力。需要 Node 22.18.0、pnpm 11.19.0。

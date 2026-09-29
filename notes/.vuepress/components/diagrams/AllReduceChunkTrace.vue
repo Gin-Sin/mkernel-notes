@@ -2,18 +2,21 @@
 import { computed, ref } from 'vue'
 
 const stage = ref(2)
-const steps = ['还缺一个 tile', '本节点计算就绪', '本地归约完成', '远端部分和到达', '最终结果已发布']
-const localReady = computed(() => stage.value >= 2)
-const remoteReady = computed(() => stage.value >= 3)
+const arrivalOrder = ref<'local' | 'remote'>('local')
+const steps = computed(() => ['还缺一个 tile', '本节点计算就绪', arrivalOrder.value === 'local' ? '本地归约完成' : '远端部分和到达', '两份部分和到齐', '最终结果已发布'])
+const localReady = computed(() => stage.value >= 3 || (stage.value === 2 && arrivalOrder.value === 'local'))
+const remoteReady = computed(() => stage.value >= 3 || (stage.value === 2 && arrivalOrder.value === 'remote'))
 const published = computed(() => stage.value >= 4)
 const complete = (gpu: number, tile: number) => stage.value > 0 || gpu !== 7 || tile !== 3
-const explanations = [
+const explanations = computed(() => [
   'GPU 7 的这个 chunk 还缺 tile 3，尚未发出本轮 chunk 就绪信号；owner 等待全部 8 张 GPU。',
   '8 张 GPU 都已发出本轮信号，owner 可以读取并归约这组贡献；本地部分和此时尚未发布。',
-  'owner 已把部分和写入 C_local 和 staging_buf，并发布 local_done_flag。可以提交发送，但最终归约仍等远端。',
+  arrivalOrder.value === 'local'
+    ? '本地部分和已写入 C_local 和 staging_buf，可以提交发送；最终归约仍等远端的 R。'
+    : '远端的 R 已进入 C_recv，本地部分和 L 尚未发布；最终归约仍需等待 local_done_flag。',
   '本地和远端两份部分和都已就绪，最终归约具备执行条件；这还不表示 C_final 已发布。',
   '最终归约把 L + R 写入 C_final 的组播映射，这个 chunk 的结果复制到节点内 8 张 GPU。',
-]
+])
 </script>
 
 <template>
@@ -22,6 +25,7 @@ const explanations = [
     <div class="mk-toolbar" role="group" aria-label="选择 AllReduce chunk 阶段">
       <button v-for="(name, i) in steps" :key="name" :aria-pressed="stage === i" @click="stage = i">{{ i + 1 }}. {{ name }}</button>
     </div>
+    <div class="mk-toolbar arrival-order" role="group" aria-label="选择两份部分和的就绪顺序"><span>对照到达顺序</span><button :aria-pressed="arrivalOrder === 'local'" @click="arrivalOrder = 'local'">本地先好</button><button :aria-pressed="arrivalOrder === 'remote'" @click="arrivalOrder = 'remote'">远端先到</button></div>
     <div class="chunk-scope"><strong>输出行 1024–1151 · 列 0–1023</strong><span>4 个 128 × 256 的 BF16 tile = 256 KiB</span></div>
     <div class="trace-layout">
       <div class="contribution-panel">
@@ -54,27 +58,31 @@ const explanations = [
         <div class="panel-label">owner GPU 2 的接收与发布</div>
         <div class="remote-origin">另一节点 GPU 2 的部分和 R</div>
         <div class="network-arrow" :class="{ arrived: remoteReady }">↓ RDMA</div>
-        <div class="buffer-name">C_recv <span>远端接收缓冲区</span></div>
-        <div class="four-tiles receive" :class="{ 'remote-ready': remoteReady }"><span v-for="t in 4" :key="t">{{ remoteReady ? `R${t - 1}` : '—' }}</span></div>
+        <div class="receive-status">{{ remoteReady ? '✓ 本轮 R 已写入 C_recv' : '… 本轮 R 尚未到达 C_recv' }}</div>
         <div class="readiness-gate">
           <div class="flag" :class="{ set: localReady }"><span>local_done_flag</span><b>{{ localReady ? 1 : 0 }}</b></div>
           <div class="and-symbol">且</div>
           <div class="flag" :class="{ set: remoteReady }"><span>remote_arrived_flag</span><b>{{ remoteReady ? 1 : 0 }}</b></div>
           <strong class="gate-result">{{ published ? '本轮已经执行最终归约' : localReady && remoteReady ? '可以执行最终归约' : '最终归约等待中' }}</strong>
         </div>
-        <div class="buffer-name">C_final <span>最终结果：L + R</span></div>
-        <div class="four-tiles final" :class="{ published }"><span v-for="t in 4" :key="t">{{ published ? `Σ${t - 1}` : '—' }}</span></div>
+        <div class="sum-caption">按列对齐同一个 tile · L + R</div>
+        <div class="sum-matrix" role="group" aria-label="读取本地与远端同一 tile 的部分和，逐元素相加写入最终结果">
+          <span class="sum-label">读 C_local</span><div class="four-tiles local-input" :class="{ ready: localReady }"><span v-for="t in 4" :key="t">{{ localReady ? `L${t - 1}` : '—' }}</span></div>
+          <span class="sum-label">+ C_recv</span><div class="four-tiles receive" :class="{ 'remote-ready': remoteReady }"><span v-for="t in 4" :key="t">{{ remoteReady ? `R${t - 1}` : '—' }}</span></div>
+          <span class="sum-label sum-result-label">= C_final</span><div class="four-tiles final" :class="{ published }"><span v-for="t in 4" :key="t">{{ published ? `Σ${t - 1}` : '—' }}</span></div>
+        </div>
         <div class="replica-label">节点内组播 · 仅展示这一 chunk</div>
         <div class="output-replicas"><span v-for="g in 8" :key="g" :class="{ published }">G{{ g - 1 }}<b>{{ published ? 'Σ' : '—' }}</b></span></div>
       </div>
     </div>
     <div class="mk-readout" aria-live="polite">{{ explanations[stage] }}</div>
-    <p class="mk-note">L、R 分别是两个节点的部分和；空格表示本轮数据尚不可用。左侧格子记录计算进度，缓冲区按逻辑 tile 绘制。图示采用小规模静态归属分支，展示一种合法先后顺序；远端也可能先到。</p>
+    <p class="mk-note">L、R 分别是节点 0、1 的部分和，与首页归约图一致。“读 C_local”引用左侧同一缓冲区；空格表示本轮尚不可用。格子表示计算进度或逻辑 tile，小规模静态分支须同时满足两个 flag；到齐后仍需执行归约。</p>
   </figure>
 </template>
 
 <style scoped>
 .chunk-scope { display: grid; gap: .25rem; margin-bottom: 1rem; font-size: .9rem; }
+.arrival-order > span { color: var(--diagram-muted); font-size: .8rem; }
 .chunk-scope span, .muted { color: var(--diagram-muted); font-size: .8rem; }
 .trace-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
 .contribution-panel, .remote-panel { min-width: 0; padding: .85rem; border: 1px solid var(--diagram-line); border-radius: 8px; }
@@ -98,6 +106,13 @@ const explanations = [
 .four-tiles { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 3px; }
 .four-tiles > span { display: grid; place-items: center; min-height: 32px; border: 1px dashed var(--diagram-line); border-radius: 3px; color: var(--diagram-muted); }
 .four-tiles.local-ready > span { color: var(--mk-local); border: 1px solid var(--mk-local); background: color-mix(in srgb,var(--mk-local) 10%,transparent); }
+.four-tiles.local-input.ready > span { color: var(--mk-local); border: 1px solid var(--mk-local); background: color-mix(in srgb,var(--mk-local) 10%,transparent); }
+.receive-status, .sum-caption { color: var(--diagram-muted); font-size: .8rem; }
+.sum-caption { margin-bottom: .6rem; }
+.sum-matrix { display: grid; grid-template-columns: 70px minmax(0, 1fr); align-items: center; gap: 6px; }
+.sum-label { font-size: .7rem; white-space: nowrap; }
+.sum-result-label, .sum-matrix .final { border-top: 2px solid var(--diagram-line); padding-top: 6px; }
+.sum-matrix .four-tiles { gap: 2px; font-size: .85rem; }
 .send-status { margin-top: .65rem; font-size: .8rem; color: var(--diagram-muted); }.send-status.enabled { color: var(--mk-network); }
 .remote-origin { padding: .7rem; border: 1px solid var(--mk-network); border-radius: 6px; color: var(--mk-network); text-align: center; }
 .network-arrow { text-align: center; margin: 1.25rem 0; color: var(--diagram-muted); }.network-arrow.arrived { color: var(--mk-network); }

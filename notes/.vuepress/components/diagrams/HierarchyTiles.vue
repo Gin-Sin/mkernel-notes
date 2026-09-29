@@ -11,7 +11,7 @@ const descriptions = [
 ]
 const stateLabel = computed(() => ['局部贡献', '节点内部分和', '跨节点最终和', '完整输出'][stage.value])
 function hasValue(row: number, col: number) { return stage.value === 0 || stage.value === 3 || row === col }
-function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : stage.value === 1 ? (node ? 'B' : 'A') : 'Σ' }
+function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : stage.value === 1 ? (node ? 'R' : 'L') : 'Σ' }
 </script>
 <template>
   <figure class="mk-figure hierarchy-demo" aria-label="两个节点上 GPU 与输出分片的数据布局">
@@ -25,8 +25,8 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
           <div class="contribution-chips"><span v-for="gpu in 8" :key="gpu">{{ node ? 'b' : 'a' }}{{ gpu - 1 }}</span></div>
         </div>
         <div class="trace-reduce" :style="{ gridColumn: node ? 3 : 1 }"><span>↓</span> NVSwitch 归约</div>
-        <div class="trace-owner" :style="{ gridColumn: node ? 3 : 1 }"><strong>{{ node ? 'B' : 'A' }}</strong><span>节点内部分和</span><small>owner · GPU {{ selected }}</small></div>
-        <div class="trace-combine" :style="{ gridColumn: node ? 3 : 1 }"><span>↓ 加上远端部分和</span><strong>Σ = A + B</strong></div>
+        <div class="trace-owner" :style="{ gridColumn: node ? 3 : 1 }"><strong>{{ node ? 'R' : 'L' }}</strong><span>节点内部分和</span><small>owner · GPU {{ selected }}</small></div>
+        <div class="trace-combine" :style="{ gridColumn: node ? 3 : 1 }"><span>↓ 加上远端部分和</span><strong>Σ = L + R</strong></div>
         <div class="trace-broadcast" :style="{ gridColumn: node ? 3 : 1 }"><span class="trace-label">↓ NVSwitch 广播</span><div class="contribution-chips"><span v-for="gpu in 8" :key="gpu">Σ</span></div><span class="trace-label">GPU 0–7 各得一份</span></div>
       </template>
       <div class="trace-exchange"><span>跨网</span><b>⇄</b></div>
@@ -54,9 +54,9 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
         </div>
       </div>
     </div>
-    <div v-if="stage === 2" class="exchange active"><span>GPU {{ selected }} · 节点 0</span><strong>A ⇄ B</strong><span>GPU {{ selected }} · 节点 1</span></div>
+    <div v-if="stage === 2" class="exchange active"><span>GPU {{ selected }} · 节点 0</span><strong>L ⇄ R</strong><span>GPU {{ selected }} · 节点 1</span></div>
     <div class="mk-readout" aria-live="polite">{{ descriptions[stage] }}</div>
-    <p class="mk-note">a / b：单 GPU 贡献；A / B：节点内和；Σ = A + B。空格省略非 owner 的存储状态，不表示清空 buffer；逻辑分组不代表实际地址连续。</p>
+    <p class="mk-note">a / b：单 GPU 贡献；L / R：节点内和；Σ = L + R，与源码图一致。空格省略非 owner 的存储状态，不表示清空 buffer；逻辑分组不代表实际地址连续。</p>
     </details>
     <p class="mk-note">D/8 为两节点交换阶段的每 GPU 发送量；各组可独立推进。</p>
   </figure>
