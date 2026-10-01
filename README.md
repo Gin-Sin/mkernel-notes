@@ -14,6 +14,8 @@
 
 [配图参考与本轮审阅](reviews/visual-reference-review-2026-09-29.md)记录了 CUTLASS、PagedAttention、FlashAttention-2、OSTEP 与 C4 的参考图，以及 11 张图的保留依据、修改和验证。
 
+[网站设计与体验自检](reviews/site-design-review-2026-10-01.md)记录了研究刊物布局、原创首页交互、八项设计检查与响应式验证。
+
 ## 本地使用
 
 基于 [vuepress-notes-template](https://github.com/0xkoa1a/vuepress-notes-template)，保留其搜索、KaTeX、Mermaid、暗色模式、文章目录和单页导出能力。需要 Node 22.18.0、pnpm 11.19.0。

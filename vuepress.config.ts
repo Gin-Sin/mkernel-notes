@@ -77,7 +77,7 @@ export default defineUserConfig({
       "link",
       {
         rel: "icon",
-        href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='12' y='6' width='40' height='52' rx='6' fill='%233b82f6'/%3E%3Cpath d='M22 22h20M22 32h20M22 42h14' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
+        href: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23202923'/%3E%3Cpath d='M10 23 32 11l22 12-22 12Z M10 34l22 12 22-12 M10 45l22 12 22-12' fill='none' stroke='%23c5d896' stroke-width='3'/%3E%3C/svg%3E",
       },
     ],
   ],

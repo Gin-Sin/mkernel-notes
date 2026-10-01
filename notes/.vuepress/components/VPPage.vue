@@ -3,7 +3,6 @@ import type { Slot } from "@vuepress/helper/client"
 import { Content } from "vuepress/client"
 
 import VPPageMeta from "@vuepress/theme-default/components/VPPageMeta.vue"
-import VPPageNav from "@vuepress/theme-default/components/VPPageNav.vue"
 
 import ArticleToc from "./ArticleToc.vue"
 
@@ -21,16 +20,15 @@ defineSlots<{
   <main class="vp-page">
     <slot name="top" />
     <div class="vp-article-layout">
+      <ArticleToc />
       <div class="vp-article-main">
         <div vp-content>
           <slot name="content-top" />
-          <Content id="content" />
+          <Content id="content" tabindex="-1" />
           <slot name="content-bottom" />
         </div>
         <VPPageMeta v-if="!isPortableExport" />
-        <VPPageNav v-if="!isPortableExport" />
       </div>
-      <ArticleToc />
     </div>
     <slot name="bottom" />
   </main>
@@ -85,6 +83,9 @@ defineSlots<{
       max-width: var(--article-layout-width);
       margin-inline: auto;
     }
+
+    .vp-article-main { grid-area: 1 / 1; }
+    .vp-toc-placeholder { grid-area: 1 / 2; }
 
     .vp-article-main > [vp-content],
     .vp-article-main > .vp-page-meta,

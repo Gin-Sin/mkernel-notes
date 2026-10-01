@@ -22,6 +22,7 @@ import AllReduceChunkTrace from "./components/diagrams/AllReduceChunkTrace.vue"
 import CommandPublication from "./components/diagrams/CommandPublication.vue"
 
 import "katex/dist/katex.min.css"
+import ResearchLayout from "./components/ResearchLayout.vue"
 
 defineMermaidConfig({
   flowchart: {
@@ -62,6 +63,7 @@ defineMermaidConfig({
 })
 
 export default defineClientConfig({
+  layouts: import.meta.env.VITE_PORTABLE_EXPORT === "1" ? {} : { Layout: ResearchLayout },
   enhance({ app }) {
     app.component("PipelineTimeline", PipelineTimeline)
     app.component("HierarchyTiles", HierarchyTiles)

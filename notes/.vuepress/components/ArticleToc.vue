@@ -12,6 +12,7 @@ const headers = useHeaders({
 })
 const route = useRoute()
 const toc = ref<HTMLElement>()
+const mobileToc = ref<HTMLDetailsElement>()
 const tocMarkerTop = ref("-2rem")
 
 const isActive = (header: PageHeader): boolean => route.hash === `#${header.slug}`
@@ -96,6 +97,12 @@ const renderHeaders = (items: PageHeader[]): ReturnType<typeof h> | null =>
 
 <template>
   <ClientOnly>
+    <details v-if="headers.length" ref="mobileToc" class="mobile-outline">
+      <summary>本页目录 <span>{{ headers.length }} 节</span></summary>
+      <nav aria-label="本页章节" @click="event => { if ((event.target as Element).closest('a') && mobileToc) mobileToc.open = false }">
+        <component :is="renderHeaders(headers)" />
+      </nav>
+    </details>
     <div v-if="headers.length" class="vp-toc-placeholder">
       <aside id="toc" vp-toc :aria-label="siteConfig.outline.ariaLabel">
         <div class="vp-toc-header">{{ siteConfig.outline.title }}</div>
