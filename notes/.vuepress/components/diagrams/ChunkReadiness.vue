@@ -15,6 +15,10 @@ const batches = computed(() => Array.from({length: Math.ceil(messages.value / 8)
       <span>一个 chunk 包含</span>
       <button v-for="n in [1, 4, 8]" :key="n" :aria-pressed="size === n" @click="size = n; selected = 0">{{ n }} tiles</button>
     </div>
+    <div class="chunk-tradeoff" aria-live="polite">
+      <div><span>首条消息至少等</span><strong>{{ size }} <small>tiles 就绪</small></strong></div>
+      <div><span>发完这 16 个 tile 共需</span><strong>{{ 16 / size }} <small>条消息</small></strong></div>
+    </div>
     <label :for="`${uid}-ready`">本地已完成：<strong>{{ ready }} / 16 tiles</strong></label>
     <input :id="`${uid}-ready`" v-model.number="ready" type="range" min="0" max="16" />
     <div class="chunk-grid" :style="{ '--group-cols': size }">
@@ -41,6 +45,8 @@ const batches = computed(() => Array.from({length: Math.ceil(messages.value / 8)
   </figure>
 </template>
 <style scoped>
+.chunk-tradeoff { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: .4rem 0 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--diagram-line); }
+.chunk-tradeoff > div { display: grid; gap: .3rem; }.chunk-tradeoff span, .chunk-tradeoff small { color: var(--diagram-muted); font-size: .8rem; font-weight: 400; }.chunk-tradeoff strong { color: var(--mk-network); font-size: 1.6rem; }
 .chunk-demo label { font-size: .95rem; }.chunk-demo input { margin-bottom: 1.1rem; }
 .chunk-grid { display: flex; flex-wrap: wrap; gap: .65rem; }
 .chunk-grid .chunk-box { flex: 0 1 auto; padding: .3rem; border: 1px dashed var(--diagram-line); border-radius: 5px; min-width: 0; color: inherit; background: transparent; }

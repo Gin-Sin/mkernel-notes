@@ -17,6 +17,11 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
   <figure class="mk-figure hierarchy-demo" aria-label="两个节点上 GPU 与输出分片的数据布局">
     <figcaption><strong>8 份局部贡献，怎样只跨网发送 1 份？</strong><span>2 节点 × 8 GPU · 布局示意</span></figcaption>
     <div class="mk-toolbar" role="group" aria-label="选择要追踪的输出组"><span>追踪输出组</span><button v-for="col in 8" :key="col" :aria-pressed="selected === col - 1" @click="selected = col - 1">{{ col - 1 }}</button></div>
+    <div class="crossing-comparison" role="group" :aria-label="`同一输出组 ${selected}，每节点单向发送量的对照`">
+      <div><span>8 份贡献直接跨网</span><div class="crossing-blocks"><i v-for="gpu in 8" :key="gpu">a{{ gpu - 1 }}</i></div><strong>D</strong></div>
+      <div class="after-reduce"><span>先节点内求和再跨网</span><div class="crossing-blocks"><i>L</i></div><strong>D/8</strong></div>
+      <p>只看选中这一组 · 每格 D/8 · 每节点单向发送；上行为假设对照，不代表 NCCL 路径。</p>
+    </div>
     <div class="reduction-trace" :aria-label="`输出组 ${selected} 在两个节点内归约、跨节点交换再广播`" role="group">
       <template v-for="node in [0, 1]" :key="node">
         <div class="trace-contributions" :style="{ gridColumn: node ? 3 : 1 }">
@@ -62,6 +67,13 @@ function value(node: number) { return stage.value === 0 ? (node ? 'b' : 'a') : s
   </figure>
 </template>
 <style scoped>
+.crossing-comparison { margin: .4rem 0 1.4rem; padding-bottom: 1rem; border-bottom: 1px solid var(--diagram-line); }
+.crossing-comparison > div { display: grid; grid-template-columns: 150px minmax(0, 1fr) 44px; gap: .7rem; align-items: center; margin: .6rem 0; font-size: .85rem; }
+.crossing-blocks { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; }
+.crossing-blocks i { display: grid; place-items: center; min-height: 30px; font-style: normal; color: var(--mk-compute); background: color-mix(in srgb, var(--mk-compute) 12%, transparent); border: 1px solid currentColor; border-radius: 3px; }
+.after-reduce .crossing-blocks i { color: var(--mk-local); background: color-mix(in srgb, var(--mk-local) 12%, transparent); }
+.crossing-comparison p { margin: .6rem 0 0; font-size: .8rem; color: var(--diagram-muted); }
+@media (max-width: 600px) { .crossing-comparison > div { grid-template-columns: minmax(0, 1fr) 44px; gap: .35rem; }.crossing-comparison > div > span { grid-column: 1 / -1; } }
 .reduction-trace { display: grid; grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr); margin-bottom: 1.1rem; }
 .trace-contributions { grid-row: 1; }.trace-contributions > strong { display: block; margin-bottom: .2rem; }
 .trace-label { display: block; color: var(--diagram-muted); font-size: .8rem; margin: .35rem 0; }

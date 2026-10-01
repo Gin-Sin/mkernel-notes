@@ -5,8 +5,8 @@ export const siteConfig = {
   navbar: [
     { text: "主线", link: "/" },
     { text: "协同机制", link: "/mechanisms.html" },
-    { text: "五类算子", link: "/kernels.html" },
     { text: "源码导读", link: "/code-walkthrough.html" },
+    { text: "五类算子", link: "/kernels.html" },
     { text: "性能与边界", link: "/evaluation.html" },
     { text: "源码索引", link: "/implementation.html" },
     { text: "GitHub", link: "https://github.com/Gin-Sin/mkernel-notes" },

@@ -16,6 +16,7 @@ import TokenBoundary from "./components/diagrams/TokenBoundary.vue"
 import AttentionRing from "./components/diagrams/AttentionRing.vue"
 
 import PeakComparison from "./components/diagrams/PeakComparison.vue"
+import ModelSpeedup from "./components/diagrams/ModelSpeedup.vue"
 
 import GatherGemmLayout from "./components/diagrams/GatherGemmLayout.vue"
 import AllReduceChunkTrace from "./components/diagrams/AllReduceChunkTrace.vue"
@@ -72,6 +73,7 @@ export default defineClientConfig({
     app.component("TokenBoundary", TokenBoundary)
     app.component("AttentionRing", AttentionRing)
     app.component("PeakComparison", PeakComparison)
+    app.component("ModelSpeedup", ModelSpeedup)
     app.component("GatherGemmLayout", GatherGemmLayout)
     app.component("SmAllocationDemo", SmAllocationDemo)
     app.component("AllReduceChunkTrace", AllReduceChunkTrace)

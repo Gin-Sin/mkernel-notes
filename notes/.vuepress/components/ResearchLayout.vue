@@ -73,7 +73,7 @@ onUnmounted(() => {
       </RouteLink>
       <nav class="header-shortcuts" aria-label="常用章节">
         <RouteLink to="/mechanisms.html" :aria-current="index === 1 ? 'page' : undefined">理解机制</RouteLink>
-        <RouteLink to="/code-walkthrough.html" :aria-current="index === 3 ? 'page' : undefined">走进源码</RouteLink>
+        <RouteLink to="/code-walkthrough.html" :aria-current="chapter.path === '/code-walkthrough.html' ? 'page' : undefined">走进源码</RouteLink>
       </nav>
       <div class="header-actions">
         <SearchBox />

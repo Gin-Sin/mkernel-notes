@@ -5,16 +5,18 @@
 - 在线阅读：https://Gin-Sin.github.io/mkernel-notes/
 - [主线：从一次 AllReduce 理解 mKernel](notes/index.md)
 - [协同机制：把就绪、通信与资源接起来](notes/mechanisms.md)
-- [五类算子：按依赖方向选择调度](notes/kernels.md)
 - [源码导读：跟踪一个 AllReduce chunk](notes/code-walkthrough.md)
+- [五类算子：按依赖方向选择调度](notes/kernels.md)
 - [性能结果与适用边界](notes/evaluation.md)
 - [源码索引与复现边界](notes/implementation.md)
 
-按“完整案例 → 协同机制 → 算子差异 → 源码追踪 → 性能证据”阅读。11 张示意图分别呈现时间重叠、数据归属、矩阵分块、粒度衔接、资源分配、通信路径、token 边界、KV 交换、性能结果，以及新增的 AllReduce 缓冲区／就绪状态与 48 字节命令发布。配图区分论文数据与教学示意，精确参数与推导可按需展开。性能数字来自论文 v1，未在此仓库复跑 GPU benchmark。源码核对固定于 uccl-project/mKernel commit `31b6b0f97e7bbc966fcb6179607131e76cae6f20`。
+按“完整案例 → 协同机制 → 同一 chunk 的源码追踪 → 算子差异 → 性能证据”阅读。12 张示意图分别呈现时间重叠、数据归属、矩阵分块、粒度衔接、资源分配、通信路径、token 边界、KV 交换、性能结果，以及新增的 AllReduce 缓冲区／就绪状态与 48 字节命令发布、算子收益到端到端收益的 Amdahl 对照。配图区分论文数据与教学示意，精确参数与推导可按需展开。性能数字来自论文 v1，未在此仓库复跑 GPU benchmark。源码核对固定于 uccl-project/mKernel commit `31b6b0f97e7bbc966fcb6179607131e76cae6f20`。
 
 [配图参考与本轮审阅](reviews/visual-reference-review-2026-09-29.md)记录了 CUTLASS、PagedAttention、FlashAttention-2、OSTEP 与 C4 的参考图，以及 11 张图的保留依据、修改和验证。
 
 [网站设计与体验自检](reviews/site-design-review-2026-10-01.md)记录了研究刊物布局、原创首页交互、八项设计检查与响应式验证。
+
+[内容编排与叙事复审](reviews/narrative-review-2026-10-01.md)记录了获奖作品的解释方法、章节重排、图文承接，以及新增的取舍与收益对照。
 
 ## 本地使用
 

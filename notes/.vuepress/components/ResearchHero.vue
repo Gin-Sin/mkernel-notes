@@ -17,8 +17,8 @@ const stages = [
     <div class="hero-composition">
       <div class="hero-copy">
         <p class="hero-wordmark" aria-label="mKernel">mKernel<span>.</span></p>
-        <p class="hero-thesis">计算与通信，<br>在同一条流水线上。</p>
-        <p class="hero-description">先在节点内归约，减少跨网数据。<br>再让就绪的数据早走一步。<br>从一次 AllReduce，理解多 GPU 融合设计。</p>
+        <p class="hero-thesis">少传数据，<br>少等整批完成。</p>
+        <p class="hero-description">一块输出已经算完，为什么还不能发？<br>沿一次 AllReduce 追踪数据与等待，<br>理解 mKernel 的设计、实现与收益边界。</p>
         <a href="#content" class="hero-cta">开始阅读 <span aria-hidden="true">↘</span></a>
         <a class="hero-paper" href="https://arxiv.org/abs/2609.13585v1">阅读原论文 ↗</a>
       </div>
@@ -51,7 +51,7 @@ const stages = [
     <nav class="reading-path" aria-label="推荐阅读路径">
       <a href="#content"><span class="path-number">01</span><span><small>先看完整过程</small><strong>建立主线</strong></span><span class="path-arrow" aria-hidden="true">↘</span></a>
       <RouteLink :to="chapters[1].path"><span class="path-number">02</span><span><small>再拆解实现条件</small><strong>理解协同机制</strong></span><span class="path-arrow" aria-hidden="true">↗</span></RouteLink>
-      <RouteLink :to="chapters[3].path"><span class="path-number">04</span><span><small>沿一个数据块核对</small><strong>走进源码</strong></span><span class="path-arrow" aria-hidden="true">↗</span></RouteLink>
+      <RouteLink :to="chapters[2].path"><span class="path-number">03</span><span><small>沿同一块数据核对</small><strong>走进源码</strong></span><span class="path-arrow" aria-hidden="true">↗</span></RouteLink>
     </nav>
   </section>
 </template>

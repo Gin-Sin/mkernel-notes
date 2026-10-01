@@ -1,13 +1,13 @@
 ---
 title: "源码导读：跟踪一个 AllReduce chunk"
-order: 4
+order: 3
 ---
 
 # 源码导读：跟踪一个 AllReduce chunk
 
-前面解释了 mKernel 的设计。本页回到[主线中的 GEMM + AllReduce](./index.md)，跟踪一组数据从计算完成、节点内归约，到发送、接收和最终发布。读完应能回答：**数据在哪个缓冲区、谁在处理它、下一个阶段具体等哪个条件。**
+前两章一直在追踪[一次 GEMM + AllReduce](./index.md)：输出先在节点内求和，就绪后跨网，最后合成完整结果。这里保持同一条路径，把视野从 GPU 2 负责的整组输出缩小到它的第一个 chunk，检查**数据在哪个缓冲区、谁在处理它、下一个阶段具体等哪个条件**。这样就能核对前面的机制在代码中是否成立。
 
-依据本地仓库 `/kl_infra_infer_alg/xianjianwen/mKernel` 的固定版本 [31b6b0f](https://github.com/uccl-project/mKernel/tree/31b6b0f97e7bbc966fcb6179607131e76cae6f20)。下面核对的是源码控制流，未运行 CUDA／RDMA 实验；该版本持续演进后的实现选择，与论文 v1 的机制说明分别标注。
+源码固定于 [31b6b0f](https://github.com/uccl-project/mKernel/tree/31b6b0f97e7bbc966fcb6179607131e76cae6f20)。下面核对的是源码控制流，未运行 CUDA／RDMA 实验；该版本持续演进后的实现选择，与论文 v1 的机制说明分别标注。本地副本位于 `/kl_infra_infer_alg/xianjianwen/mKernel`。
 
 ## 1. 跟踪一组输出的完整旅程
 
@@ -91,3 +91,5 @@ order: 4
 分支依据分别是 [`shared_reduce_my_slice`](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/src/gemm_ar.cu#L1198-L1240)、[静态分支的角色检查](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/src/gemm_ar.cu#L1042-L1057)和 [host 的 epilogue 选择](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/operators/gemm_ar/gemm_ar.cuh#L1458-L1478)。中间规模和可选配置需按对应分支继续阅读；ready queue 的初始值见 [make_globals](https://github.com/uccl-project/mKernel/blob/31b6b0f97e7bbc966fcb6179607131e76cae6f20/include/operators/gemm_ar/gemm_ar.cuh#L1317)。
 
 dispatcher 在计算、节点内归约和发送角色结束后，也调用共享归约入口，但本页的静态归属分支会让这些 block 直接返回；工作窃取分支也限制为专门的归约 block。仅看到共享函数调用，还不足以认定它们实际接管了通信工作，更不足以对应论文式 (2) 的进度／成本控制器。源码能确认本页的数据和状态交接；实际耗时改善仍应回到[性能证据](./evaluation.md)，并使用匹配版本与配置的实验检验。
+
+到这里，同一组输出已经从局部贡献变成可发布的完整结果。接下来到[五类算子](./kernels.md)，保持“下一步等什么”的判断方法，比较输入通信与 KV 交换；无需重新从全部机制学起。
