@@ -18,7 +18,7 @@ const stages = [
       <div class="hero-copy">
         <p class="hero-wordmark" aria-label="mKernel">mKernel<span>.</span></p>
         <p class="hero-thesis">计算与通信，<br>在同一条流水线上。</p>
-        <p class="hero-description">先在节点内少传一些，<br>再让就绪的数据早走一步。<br>从一次 AllReduce，理解多 GPU 融合设计。</p>
+        <p class="hero-description">先在节点内归约，减少跨网数据。<br>再让就绪的数据早走一步。<br>从一次 AllReduce，理解多 GPU 融合设计。</p>
         <a href="#content" class="hero-cta">开始阅读 <span aria-hidden="true">↘</span></a>
         <a class="hero-paper" href="https://arxiv.org/abs/2609.13585v1">阅读原论文 ↗</a>
       </div>
